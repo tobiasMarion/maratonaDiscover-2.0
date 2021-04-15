@@ -1,39 +1,7 @@
 const express = require('express')
 const routes = express.Router()
-
-const views = __dirname + '/views/'
-
-// Fake data
-const Profile = {
-  data: {
-    name: 'Tobias',
-    avatar: 'https://github.com/tobiasmarion.png',
-    monthlyBudget: 100000,
-    hoursPerDay: 4,
-    daysPerWeek: 5,
-    vacationsPerYear: 4,
-    valueHour: 75
-  },
-  controllers: {
-    index(req, res) {
-      return res.render(views + 'profile', { profile: Profile.data })
-    },
-
-    update(req, res) {
-      const data = req.body
-      const weeksPerYear = 52
-      const weeksPerMonth = (weeksPerYear - data.vacationsPerYear) / 12
-      const weeklyTotalHours = data.hoursPerDay * data.daysPerWeek
-      const monthlyTotalHours = weeklyTotalHours * weeksPerMonth
-      data.valueHour = data.monthlyBudget / monthlyTotalHours
-
-      Profile.data = data
-
-      return res.redirect('/profile')
-    }
-  }
-}
-
+const ProfileController = require('./controllers/ProfileController')
+ 
 const Job = {
   data: [
     {
@@ -66,7 +34,7 @@ const Job = {
         }
       })
 
-      return res.render(views + 'index', { updatedJobs })
+      return res.render('index', { updatedJobs })
     },
     save(req, res) {
       const lastId = Job.data[Job.data.length - 1]?.id || 0
@@ -82,7 +50,7 @@ const Job = {
       return res.redirect('/')
     },
     create(req, res) {
-      return res.render(views + 'job')
+      return res.render('job')
     },
     show(req, res) {
       const jobId = req.params.id
@@ -95,7 +63,7 @@ const Job = {
 
       job.budget = Job.services.calculateBudget(job, Profile.data.valueHour)
 
-      return res.render(views + 'job-edit', { job })
+      return res.render('job-edit', { job })
     },
     update(req, res) {
       const jobId = req.params.id
@@ -121,7 +89,7 @@ const Job = {
 
       })
 
-      res.redirect('/job/' + job.id)
+      res.redirect('job/' + job.id)
     },
     delete(req, res) {
       const jobId = req.params.id
@@ -132,7 +100,7 @@ const Job = {
     }
   },
 
-  services: {
+   services: {
     remainingDays(job) {
       const remainingDays = Math.round(job.totalHours / job.dailyHours) //Days to finish
 
@@ -157,11 +125,11 @@ const Job = {
 routes.get('/', Job.controllers.index)
 routes.get('/job', Job.controllers.create)
 routes.get('/job/:id', Job.controllers.show)
-routes.get('/profile', Profile.controllers.index)
+routes.get('/profile', ProfileController.index)
 
 // Forms (Sending data)
 routes.post('/job', Job.controllers.save)
-routes.post('/profile', Profile.controllers.update)
+routes.post('/profile', ProfileController.update)
 routes.post('/job/:id', Job.controllers.update)
 routes.post('/job/delete/:id', Job.controllers.delete)
 
